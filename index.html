@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flashcards • GitHub Pages</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .card { border: 1px solid #ccc; border-radius: 8px; padding: 20px; margin: 20px 0; cursor: pointer; }
+    .front, .back { display: none; }
+    .front.active, .back.active { display: block; }
+  </style>
+</head>
+<body>
+  <h1>Flashcards</h1>
+  <select id="topicSelect"></select>
+  <button id="load">Laden</button>
+  <div id="card" class="card">
+    <div id="front" class="front active">Frage</div>
+    <div id="back" class="back">Antwort</div>
+  </div>
+  <button id="prev">Zurück</button>
+  <button id="flip">Drehen</button>
+  <button id="next">Weiter</button>
+  <script>
+    const topics = [
+      { label: "🌐 10.8 Cloud Computing Modelle", file: "data/10.8_BegriffeCloudComputingModelle.json" },
+      { label: "🌐 10.8 Cloud Computing weitere Begriffe", file: "data/10.8_BegriffeCloudComputingModelle2.json" },
+      { label: "🌐 10.8 Cloud Migration und DevOps", file: "data/10.8_BegriffeCloudMigrationUndDevOps.json" }
+    ];
+    const topicSelect = document.getElementById("topicSelect");
+    const cardEl = document.getElementById("card");
+    const frontEl = document.getElementById("front");
+    const backEl = document.getElementById("back");
+    let deck = { cards: [] };
+    let idx = 0;
+
+    function renderTopics() {
+      topics.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t.file;
+        opt.textContent = t.label;
+        topicSelect.appendChild(opt);
+      });
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    async function loadDeck(url) {
+      const res = await fetch(url);
+      const data = await res.json();
+      deck = data;
+      deck.cards = shuffle(deck.cards); // Karten mischen
+      idx = 0;
+      renderCard();
+    }
+
+    function renderCard() {
+      if (!deck.cards.length) return;
+      const c = deck.cards[idx];
+      frontEl.textContent = c.q;
+      backEl.textContent = c.a;
+      frontEl.classList.add("active");
+      backEl.classList.remove("active");
+    }
+
+    document.getElementById("load").onclick = () => loadDeck(topicSelect.value);
+    document.getElementById("flip").onclick = () => {
+      frontEl.classList.toggle("active");
+      backEl.classList.toggle("active");
+    };
+    document.getElementById("next").onclick = () => { idx = (idx+1)%deck.cards.length; renderCard(); };
+    document.getElementById("prev").onclick = () => { idx = (idx-1+deck.cards.length)%deck.cards.length; renderCard(); };
+
+    renderTopics();
+  </script>
+</body>
+</html>
